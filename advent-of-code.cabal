@@ -1,45 +1,51 @@
-cabal-version: 3.8
+cabal-version:      3.8
+name:               advent-of-code
+version:            0.1.0.0
+description:
+  Please see the README on GitHub at <https://github.com/Rypac/advent-of-code-2023#readme>
 
-name:           advent-of-code
-version:        0.1.0.0
-description:    Please see the README on GitHub at <https://github.com/lsmor/template-advent-of-code#readme>
-homepage:       https://github.com/lsmor/template-advent-of-code#readme
-bug-reports:    https://github.com/lsmor/template-advent-of-code/issues
-author:         Luis Morillo Najarro
-copyright:      2021 Luis Morillo Najarro
-license:        BSD-3-Clause
-build-type:     Simple
-extra-source-files:
-    README.md
+homepage:           https://github.com/lsmor/template-advent-of-code#readme
+bug-reports:        https://github.com/lsmor/template-advent-of-code/issues
+author:             Ryan Davis
+copyright:          2023 Ryan Davis
+license:            BSD-3-Clause
+build-type:         Simple
+extra-source-files: README.md
 
 source-repository head
-  type: git
+  type:     git
   location: https://github.com/lsmor/template-advent-of-code
 
 common deps
   default-extensions:
-      TypeApplications
-      OverloadedStrings
-      LambdaCase
-      TupleSections
-      StrictData
-      ImportQualifiedPost
+    NoFieldSelectors
+    DerivingStrategies
+    LambdaCase
+    OverloadedRecordDot
+    OverloadedStrings
+
   build-depends:
-      attoparsec
-    , base >=4.7 && <5
+    , attoparsec
+    , base               >=4.7 && <5
     , bytestring
     , containers
     , matrix
-    , vector
-    , split
-    , search-algorithms
     , mtl
     , pointedlist
-    , bytestring-trie
-  other-modules:
-      Paths_advent_of_code
+    , search-algorithms
+    , split
+    , text
+    , time
+    , vector
+
+  other-modules:      Paths_advent_of_code
   ghc-options:
-    -Wall
-  default-language: Haskell2010
+    -Wall -Wcompat -Widentities -Wincomplete-record-updates
+    -Wincomplete-uni-patterns -Wmissing-deriving-strategies
+    -Wmissing-export-lists -Wpartial-fields
+    -Wprepositive-qualified-module -Wredundant-constraints
+    -Wunused-packages -Wno-unused-top-binds
+
+  default-language:   GHC2021
 
 -- Do not touch after this line. aoc-hs will edit it
