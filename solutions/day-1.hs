@@ -1,26 +1,52 @@
 module Main (main) where
 
-import System.Environment (getArgs)
 import Data.ByteString qualified as B
+import Data.Text qualified as T
+import Data.Text.Encoding (decodeUtf8)
+import System.Environment (getArgs)
 
 {- Types for your input and your solution
 
-- Input    should as the type of your input parameter. AOC, typically uses arrays, matrices or complex data structures. 
+- Input    should as the type of your input parameter. AOC, typically uses arrays, matrices or complex data structures.
 - Solution should be the type of your solution. Typically is an Int, but It can be other things, like a list of numbers
          or a list of characters
 -}
-type Input    = B.ByteString  -- default to Bytestring, but very likely you'll need to change it
+type Input = [T.Text]
 type Solution = Int
 
--- | parser transforms a raw bytestring (from your ./input/day-X.input) to your Input type. 
---   this is intended to use attoparsec for such a transformation. You can use Prelude's 
+-- | parser transforms a raw bytestring (from your ./input/day-X.input) to your Input type.
+--   this is intended to use attoparsec for such a transformation. You can use Prelude's
 --   String if it fit better for the problem
 parser :: B.ByteString -> Input
-parser = undefined
+parser = T.lines . decodeUtf8
 
 -- | The function which calculates the solution for part one
 solve1 :: Input -> Solution
-solve1 = error "Part 1 Not implemented"
+solve1 = sum . fmap extractNumber
+ where
+  extractNumber :: T.Text -> Int
+  extractNumber line =
+    let
+      firstDigit = extractDigit line
+      lastDigit = extractDigit $ T.reverse line
+     in
+      firstDigit * 10 + lastDigit
+
+  extractDigit :: T.Text -> Int
+  extractDigit line = case (T.uncons line) of
+    Just (first, rest) -> case first of
+      '0' -> 0
+      '1' -> 1
+      '2' -> 2
+      '3' -> 3
+      '4' -> 4
+      '5' -> 5
+      '6' -> 6
+      '7' -> 7
+      '8' -> 8
+      '9' -> 9
+      _ -> extractDigit rest
+    Nothing -> 0
 
 -- | The function which calculates the solution for part two
 solve2 :: Input -> Solution
@@ -40,4 +66,3 @@ main = do
     else do
       putStrLn "solution to problem 2 is:"
       print $ solve2 input
-
