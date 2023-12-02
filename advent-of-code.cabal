@@ -49,3 +49,7 @@ common deps
   default-language:   GHC2021
 
 -- Do not touch after this line. aoc-hs will edit it
+executable day-1
+  import:         deps
+  hs-source-dirs: solutions
+  main-is:        day-1.hs
