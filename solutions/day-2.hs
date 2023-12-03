@@ -75,7 +75,13 @@ solve1 = sum . Map.keys . Map.filter (all isValidDraw)
 
 -- | The function which calculates the solution for part two
 solve2 :: Input -> Solution
-solve2 = error "Part 2 Not implemented"
+solve2 = sum . fmap power . minDraws
+ where
+  power :: Map.Map Color Int -> Int
+  power = Map.foldl' (*) 1
+
+  minDraws :: Input -> [Map.Map Color Int]
+  minDraws = fmap (Map.fromListWith max . concatMap Map.toList) . Map.elems
 
 main :: IO ()
 main = do
