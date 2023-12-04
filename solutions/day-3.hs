@@ -1,6 +1,7 @@
 module Main (main) where
 
 import Data.ByteString qualified as B
+import Data.Foldable (foldl')
 import Data.Maybe (mapMaybe)
 import Data.Set qualified as Set
 import Data.Text (Text, intercalate, pack)
@@ -94,7 +95,44 @@ solve1 input =
 
 -- | The function which calculates the solution for part two
 solve2 :: Input -> Solution
-solve2 = error "Part 2 Not implemented"
+solve2 input =
+  let
+    gearSymbolLocations = mapMaybe gearSymbolLocation input
+    partNumbers = fmap (\symbol -> mapMaybe (partNumber symbol) input) gearSymbolLocations
+   in
+    sum $ fmap gearRatio $ filter isGear partNumbers
+ where
+  partNumber :: (Int, Int) -> Parsed -> Maybe Int
+  partNumber gearSymbol = \case
+    Number value line col ->
+      let
+        digitCount = digits value
+        x = unPos col
+        y = unPos line
+        cols = [x - (digitCount + 1) .. x]
+        lines = [y - 1 .. y + 1]
+        locations = concatMap (\c -> map (\l -> (c, l)) lines) cols
+       in
+        if any (\l -> l == gearSymbol) locations
+          then Just value
+          else Nothing
+    Symbol _ _ _ -> Nothing
+
+  isGear :: [Int] -> Bool
+  isGear partNumbers = length partNumbers == 2
+
+  gearRatio :: [Int] -> Int
+  gearRatio = foldl' (*) 1
+
+  digits :: Int -> Int
+  digits 0 = 0
+  digits n = 1 + digits (div n 10)
+
+  gearSymbolLocation :: Parsed -> Maybe (Int, Int)
+  gearSymbolLocation = \case
+    Symbol '*' line col -> Just ((unPos col) - 1, unPos line)
+    Symbol _ _ _ -> Nothing
+    Number _ _ _ -> Nothing
 
 main :: IO ()
 main = do
