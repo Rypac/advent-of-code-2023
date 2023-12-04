@@ -23,6 +23,7 @@ common deps
     LambdaCase
     OverloadedRecordDot
     OverloadedStrings
+    RecordWildCards
 
   build-depends:
     , base               >=4.7 && <5
