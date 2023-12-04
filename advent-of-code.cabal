@@ -53,19 +53,19 @@ common deps
 executable day-1
   import:         deps
   hs-source-dirs: solutions
-  main-is:        day-1.hs
+  main-is:        Day01.hs
 
 executable day-2
   import:         deps
   hs-source-dirs: solutions
-  main-is:        day-2.hs
+  main-is:        Day02.hs
 
 executable day-3
   import:         deps
   hs-source-dirs: solutions
-  main-is:        day-3.hs
+  main-is:        Day03.hs
 
 executable day-4
   import:         deps
   hs-source-dirs: solutions
-  main-is:        day-4.hs
+  main-is:        Day04.hs

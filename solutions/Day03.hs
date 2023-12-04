@@ -4,7 +4,7 @@ import Data.ByteString qualified as B
 import Data.Foldable (foldl')
 import Data.Maybe (mapMaybe)
 import Data.Set qualified as Set
-import Data.Text (Text, intercalate, pack)
+import Data.Text (Text)
 import Data.Text.Encoding (decodeUtf8)
 import Data.Void (Void)
 import System.Environment (getArgs)
@@ -12,12 +12,6 @@ import Text.Megaparsec
 import Text.Megaparsec.Char
 import Text.Megaparsec.Char.Lexer qualified as L
 
-{- Types for your input and your solution
-
-- Input    should as the type of your input parameter. AOC, typically uses arrays, matrices or complex data structures.
-- Solution should be the type of your solution. Typically is an Int, but It can be other things, like a list of numbers
-         or a list of characters
--}
 type Input = [Parsed]
 type Solution = Int
 
@@ -28,9 +22,6 @@ data Parsed
 
 type Parser = Parsec Void Text
 
--- | parser transforms a raw bytestring (from your ./input/day-X.input) to your Input type.
---   this is intended to use attoparsec for such a transformation. You can use Prelude's
---   String if it fit better for the problem
 parser :: String -> B.ByteString -> Input
 parser filepath = parseOrError engineSchematicParser filepath . decodeUtf8
  where
@@ -60,9 +51,8 @@ parser filepath = parseOrError engineSchematicParser filepath . decodeUtf8
     pos <- getSourcePos
     return $ Symbol value (sourceLine pos) (sourceColumn pos)
 
--- | The function which calculates the solution for part one
-solve1 :: Input -> Solution
-solve1 input =
+part1 :: Input -> Solution
+part1 input =
   let
     symbolLocations = Set.fromList $ mapMaybe symbolLocation input
    in
@@ -93,9 +83,8 @@ solve1 input =
     Symbol _ line col -> Just ((unPos col) - 1, unPos line)
     Number _ _ _ -> Nothing
 
--- | The function which calculates the solution for part two
-solve2 :: Input -> Solution
-solve2 input =
+part2 :: Input -> Solution
+part2 input =
   let
     gearSymbolLocations = mapMaybe gearSymbolLocation input
     partNumbers = fmap (\symbol -> mapMaybe (partNumber symbol) input) gearSymbolLocations
@@ -136,15 +125,12 @@ solve2 input =
 
 main :: IO ()
 main = do
-  -- run this with cabal run -- day-x <part-number> <file-to-solution>
-  -- example: cabal run -- day-3 2 "./input/day-3.example"
-  -- will run part two of day three with input file ./input/day-3.example
   [part, filepath] <- getArgs
-  input <- parser filepath <$> B.readFile filepath -- use parser <$> readFile filepath if String is better
+  input <- parser filepath <$> B.readFile filepath
   if read @Int part == 1
     then do
       putStrLn "solution to problem 1 is:"
-      print $ solve1 input
+      print $ part1 input
     else do
       putStrLn "solution to problem 2 is:"
-      print $ solve2 input
+      print $ part2 input

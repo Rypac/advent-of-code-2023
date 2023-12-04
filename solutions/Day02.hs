@@ -8,12 +8,6 @@ import Data.Text.Encoding (decodeUtf8)
 import System.Environment (getArgs)
 import Text.Read (readMaybe)
 
-{- Types for your input and your solution
-
-- Input    should as the type of your input parameter. AOC, typically uses arrays, matrices or complex data structures.
-- Solution should be the type of your solution. Typically is an Int, but It can be other things, like a list of numbers
-         or a list of characters
--}
 type Input = Game
 type Solution = Int
 
@@ -23,9 +17,6 @@ data Color = Red | Green | Blue
 type Game = Map.Map Int [Draw]
 type Draw = Map.Map Color Int
 
--- | parser transforms a raw bytestring (from your ./input/day-X.input) to your Input type.
---   this is intended to use attoparsec for such a transformation. You can use Prelude's
---   String if it fit better for the problem
 parser :: B.ByteString -> Input
 parser = fromJust . parseGames . decodeUtf8
  where
@@ -60,9 +51,8 @@ parser = fromJust . parseGames . decodeUtf8
     "red" -> Just Red
     _ -> Nothing
 
--- | The function which calculates the solution for part one
-solve1 :: Input -> Solution
-solve1 = sum . Map.keys . Map.filter (all isValidDraw)
+part1 :: Input -> Solution
+part1 = sum . Map.keys . Map.filter (all isValidDraw)
  where
   isValidDraw :: Draw -> Bool
   isValidDraw = all (\(color, value) -> value <= lookupColorValue color) . Map.toList
@@ -73,9 +63,8 @@ solve1 = sum . Map.keys . Map.filter (all isValidDraw)
     Green -> 13
     Blue -> 14
 
--- | The function which calculates the solution for part two
-solve2 :: Input -> Solution
-solve2 = sum . fmap power . minDraws
+part2 :: Input -> Solution
+part2 = sum . fmap power . minDraws
  where
   power :: Map.Map Color Int -> Int
   power = Map.foldl' (*) 1
@@ -85,15 +74,12 @@ solve2 = sum . fmap power . minDraws
 
 main :: IO ()
 main = do
-  -- run this with cabal run -- day-x <part-number> <file-to-solution>
-  -- example: cabal run -- day-3 2 "./input/day-3.example"
-  -- will run part two of day three with input file ./input/day-3.example
   [part, filepath] <- getArgs
-  input <- parser <$> B.readFile filepath -- use parser <$> readFile filepath if String is better
+  input <- parser <$> B.readFile filepath
   if read @Int part == 1
     then do
       putStrLn "solution to problem 1 is:"
-      print $ solve1 input
+      print $ part1 input
     else do
       putStrLn "solution to problem 2 is:"
-      print $ solve2 input
+      print $ part2 input
