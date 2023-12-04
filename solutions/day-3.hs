@@ -1,7 +1,15 @@
 module Main (main) where
 
 import Data.ByteString qualified as B
+import Data.Maybe (mapMaybe)
+import Data.Set qualified as Set
+import Data.Text (Text, intercalate, pack)
+import Data.Text.Encoding (decodeUtf8)
+import Data.Void (Void)
 import System.Environment (getArgs)
+import Text.Megaparsec
+import Text.Megaparsec.Char
+import Text.Megaparsec.Char.Lexer qualified as L
 
 {- Types for your input and your solution
 
@@ -9,18 +17,80 @@ import System.Environment (getArgs)
 - Solution should be the type of your solution. Typically is an Int, but It can be other things, like a list of numbers
          or a list of characters
 -}
-type Input = B.ByteString -- default to Bytestring, but very likely you'll need to change it
+type Input = [Parsed]
 type Solution = Int
+
+data Parsed
+  = Number !Int !Pos !Pos
+  | Symbol !Char !Pos !Pos
+  deriving stock (Show)
+
+type Parser = Parsec Void Text
 
 -- | parser transforms a raw bytestring (from your ./input/day-X.input) to your Input type.
 --   this is intended to use attoparsec for such a transformation. You can use Prelude's
 --   String if it fit better for the problem
-parser :: B.ByteString -> Input
-parser = undefined
+parser :: String -> B.ByteString -> Input
+parser filepath = parseOrError engineSchematicParser filepath . decodeUtf8
+ where
+  parseOrError :: Parser a -> String -> Text -> a
+  parseOrError p path = either (error . errorBundlePretty) id . parse p path
+
+  engineSchematicParser :: Parser [Parsed]
+  engineSchematicParser = many numberOrSymbolParser <* eof
+
+  numberOrSymbolParser :: Parser Parsed
+  numberOrSymbolParser = do
+    separatorConsumer
+    L.lexeme separatorConsumer (numberParser <|> symbolParser)
+
+  separatorConsumer :: Parser ()
+  separatorConsumer = skipMany (char '.' <|> newline)
+
+  numberParser :: Parser Parsed
+  numberParser = do
+    value <- L.decimal
+    pos <- getSourcePos
+    return $ Number value (sourceLine pos) (sourceColumn pos)
+
+  symbolParser :: Parser Parsed
+  symbolParser = do
+    value <- char '*' <|> char '#' <|> char '@' <|> char '$' <|> char '%' <|> char '&' <|> char '=' <|> char '+' <|> char '/' <|> char '-'
+    pos <- getSourcePos
+    return $ Symbol value (sourceLine pos) (sourceColumn pos)
 
 -- | The function which calculates the solution for part one
 solve1 :: Input -> Solution
-solve1 = error "Part 1 Not implemented"
+solve1 input =
+  let
+    symbolLocations = Set.fromList $ mapMaybe symbolLocation input
+   in
+    sum $ mapMaybe (maybePartNumber symbolLocations) input
+ where
+  maybePartNumber :: Set.Set (Int, Int) -> Parsed -> Maybe Int
+  maybePartNumber symbols = \case
+    Number value line col ->
+      let
+        digitCount = digits value
+        x = unPos col
+        y = unPos line
+        cols = [x - (digitCount + 1) .. x]
+        lines = [y - 1 .. y + 1]
+        locations = concatMap (\c -> map (\l -> (c, l)) lines) cols
+       in
+        if any (`Set.member` symbols) locations
+          then Just value
+          else Nothing
+    Symbol _ _ _ -> Nothing
+
+  digits :: Int -> Int
+  digits 0 = 0
+  digits n = 1 + digits (div n 10)
+
+  symbolLocation :: Parsed -> Maybe (Int, Int)
+  symbolLocation = \case
+    Symbol _ line col -> Just ((unPos col) - 1, unPos line)
+    Number _ _ _ -> Nothing
 
 -- | The function which calculates the solution for part two
 solve2 :: Input -> Solution
@@ -32,7 +102,7 @@ main = do
   -- example: cabal run -- day-3 2 "./input/day-3.example"
   -- will run part two of day three with input file ./input/day-3.example
   [part, filepath] <- getArgs
-  input <- parser <$> B.readFile filepath -- use parser <$> readFile filepath if String is better
+  input <- parser filepath <$> B.readFile filepath -- use parser <$> readFile filepath if String is better
   if read @Int part == 1
     then do
       putStrLn "solution to problem 1 is:"

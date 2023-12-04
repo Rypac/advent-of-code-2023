@@ -25,11 +25,11 @@ common deps
     OverloadedStrings
 
   build-depends:
-    , attoparsec
     , base               >=4.7 && <5
     , bytestring
     , containers
     , matrix
+    , megaparsec
     , mtl
     , pointedlist
     , search-algorithms
