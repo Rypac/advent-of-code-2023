@@ -1,6 +1,9 @@
 module Main (main) where
 
 import Data.ByteString qualified as B
+import Data.Foldable (foldl')
+import Data.Map qualified as Map
+import Data.Maybe (fromMaybe)
 import Data.Set qualified as Set
 import Data.Text qualified as T
 import Data.Text.Encoding (decodeUtf8)
@@ -68,7 +71,20 @@ solve1 = sum . fmap cardPoints
 
 -- | The function which calculates the solution for part two
 solve2 :: Input -> Solution
-solve2 = error "Part 2 Not implemented"
+solve2 = sum . Map.elems . foldl' scoreCard Map.empty
+ where
+  scoreCard :: Map.Map Int Int -> ScratchCard -> Map.Map Int Int
+  scoreCard scores card =
+    let
+      copies = fromMaybe 0 $ Map.lookup card.card scores
+      cardTotal = copies + 1
+      newCopies = Map.fromList $ take (cardPoints card) $ fmap (,cardTotal) $ iterate (+ 1) (card.card + 1)
+      cardScores = Map.unionWith (+) newCopies $ Map.fromList [(card.card, 1)]
+     in
+      Map.unionWith (+) scores cardScores
+
+  cardPoints :: ScratchCard -> Int
+  cardPoints card = Set.size $ Set.intersection card.numbers card.winningNumbers
 
 main :: IO ()
 main = do
