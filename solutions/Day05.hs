@@ -60,20 +60,30 @@ parser filepath = parseOrError almanac filepath . decodeUtf8
 
 part1 :: Input -> Solution
 part1 almanac = minimum $ fmap (location almanac.mappings) almanac.seeds
- where
-  location :: [Category] -> Int -> Int
-  location [] seed = seed
-  location (category : rest) seed = location rest (convert category seed)
-
-  convert :: [Mapping] -> Int -> Int
-  convert [] seed = seed
-  convert (Mapping {source, range, destination} : rest) seed =
-    if seed >= source && seed < (source + range)
-      then destination + (seed - source)
-      else convert rest seed
 
 part2 :: Input -> Solution
-part2 = error "Part 2 not implemented"
+part2 almanac = minimum $ fmap (location almanac.mappings) seeds
+ where
+  seeds :: [Int]
+  seeds = concatMap seedRange $ pairs almanac.seeds
+
+  seedRange :: (Int, Int) -> [Int]
+  seedRange (start, range) = [start .. start + range - 1]
+
+  pairs :: [Int] -> [(Int, Int)]
+  pairs [] = []
+  pairs (x : y : xs) = (x, y) : pairs xs
+
+location :: [Category] -> Int -> Int
+location [] seed = seed
+location (category : rest) seed = location rest (convert category seed)
+
+convert :: [Mapping] -> Int -> Int
+convert [] seed = seed
+convert (Mapping {source, range, destination} : rest) seed =
+  if seed >= source && seed < (source + range)
+    then destination + (seed - source)
+    else convert rest seed
 
 main :: IO ()
 main = do
