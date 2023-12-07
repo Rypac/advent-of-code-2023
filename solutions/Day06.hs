@@ -21,42 +21,55 @@ data Race = Race
 
 type Parser = Parsec Void Text
 
-parser :: String -> B.ByteString -> Input
-parser filepath = parseOrError races filepath . decodeUtf8
+racesParser :: String -> B.ByteString -> Input
+racesParser filepath = parseOrError races filepath . decodeUtf8
  where
-  parseOrError :: Parser a -> String -> Text -> a
-  parseOrError p path = either (error . errorBundlePretty) id . parse p path
-
   races :: Parser [Race]
   races = do
     times <- string "Time:" *> space *> L.decimal `sepBy` hspace <* eol
     distances <- string "Distance:" *> space *> L.decimal `sepBy` hspace <* eol
     pure $ fmap (uncurry Race) $ zip times distances
 
-part1 :: Input -> Solution
-part1 = foldl' (*) 1 . fmap winScenarios
+raceParser :: String -> B.ByteString -> Race
+raceParser filepath = parseOrError race filepath . decodeUtf8
  where
-  winScenarios :: Race -> Int
-  winScenarios race = length $ filter (> race.duration) $ raceScenarios race.time
+  race :: Parser Race
+  race = do
+    times <- string "Time:" *> space *> (some digitChar) `sepBy` hspace <* eol
+    distances <- string "Distance:" *> space *> (some digitChar) `sepBy` hspace <* eol
 
-  raceScenarios :: Int -> [Int]
-  raceScenarios time = race time
-   where
-    race :: Int -> [Int]
-    race 0 = [0]
-    race hold = (hold * (time - hold)) : race (hold - 1)
+    let time = read $ mconcat times
+    let duration = read $ mconcat distances
+    pure $ Race {..}
 
-part2 :: Input -> Solution
-part2 = error "Part 2 not implemented"
+parseOrError :: Parser a -> String -> Text -> a
+parseOrError p path = either (error . errorBundlePretty) id . parse p path
+
+part1 :: [Race] -> Solution
+part1 = foldl' (*) 1 . fmap winScenarios
+
+part2 :: Race -> Solution
+part2 = winScenarios
+
+winScenarios :: Race -> Int
+winScenarios race = length $ filter (> race.duration) $ raceScenarios race.time
+
+raceScenarios :: Int -> [Int]
+raceScenarios time = race time
+ where
+  race :: Int -> [Int]
+  race 0 = [0]
+  race hold = (hold * (time - hold)) : race (hold - 1)
 
 main :: IO ()
 main = do
   [part, filepath] <- getArgs
-  input <- parser filepath <$> B.readFile filepath
   if read @Int part == 1
     then do
+      input <- racesParser filepath <$> B.readFile filepath
       putStrLn "solution to problem 1 is:"
       print $ part1 input
     else do
+      input <- raceParser filepath <$> B.readFile filepath
       putStrLn "solution to problem 2 is:"
       print $ part2 input
